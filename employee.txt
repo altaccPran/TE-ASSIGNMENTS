@@ -1,0 +1,14 @@
+CREATE TABLE employee(
+  id int primary key,
+  fname varchar(10) not null,
+  lname varchar(10) not null,
+  dept varchar(10) not null,
+  email varchar(30) unique not null,
+  salary int check(salary>=50000),
+  doj timestamp default current_timestamp,
+  dob date,
+  gender enum('Male', 'Female')
+);
+
+INSERT into employee(id, fname, lname, dept, email, salary, dob, gender) VALUES(31435, 'Pranav', 'Metil', 'Comp', 'pranavmetil@gmail.com', 650000, '2005-10-02', 'no');
+select * FROM employee;
