@@ -1,176 +1,122 @@
-#include <iostream>
-#include <vector>
-#include <cstdlib>
-#include <ctime>
-#include <unistd.h>
+#include <bits/stdc++.h>
+#include <chrono>
+#include <thread>
 using namespace std;
 
-struct Frame {
-    int seq;
-    bool acked;
-    bool received; // For SR
-};
+string ackOrTimeout(double prob = 0.4) {
+    double r = (double) rand() / RAND_MAX;
+    return (r < prob) ? "TIMEOUT" : "ACK";
+}
 
-class Peer {
-public:
-    string name;
-    int windowSize;
-    int seqBits;
-    int seqRange;
-    int totalFrames;
-    int base;
-    int nextSeqNum;
-    vector<Frame> frames;
-    bool selectiveRepeat;
+void sleep_ms(int ms) {
+    this_thread::sleep_for(chrono::milliseconds(ms));
+}
 
-    Peer(string n, int m, bool sr) {
-        name = n;
-        seqBits = m;
-        seqRange = (1 << m);      // 2^m
-        selectiveRepeat = sr;
-        windowSize = sr ? (1 << (m - 1)) : (seqRange - 1);
-        totalFrames = seqRange;   // one full cycle only
-        base = 0;
-        nextSeqNum = 0;
-        for (int i = 0; i < totalFrames; i++) {
-            frames.push_back({i % seqRange, false, false});
+void transmission(int i, int N, int tf, int tt) {
+    while (i <= tf) {
+        cout << "Current Window: [" << i << " - " << min(i + N - 1, tf) << "]" << endl;
+        int z = 0;
+        bool timeoutOccurred = false;
+        int timeoutFrame = -1;
+
+        for (int k = i; k < i + N && k <= tf; k++) {
+            cout << "Sending Frame " << k << "..." << endl;
+            tt++;
+            sleep_ms(500);
+        }
+
+        for (int k = i; k < i + N && k <= tf; k++) {
+            string f = ackOrTimeout();
+            if (f == "ACK") {
+                cout << "Acknowledgment for Frame " << k << "..." << endl;
+                sleep_ms(500);
+                z++;
+            } else {
+                cout << "Timeout!! Frame Number : " << k << " Not Received" << endl;
+                timeoutOccurred = true;
+                timeoutFrame = k;
+                break;
+            }
+        }
+
+        if (timeoutOccurred) {
+            int start = timeoutFrame;
+            int end = min(start + N - 1, tf);
+            cout << "\nRetransmitting Window [" << start << " - " << end << "]...\n" << endl;
+            i = start;
+        } else {
+            i = i + z;
+            if (i <= tf)
+                cout << "Sliding window moved to [" << i << " - " << min(i + N - 1, tf) << "]\n" << endl;
         }
     }
+}
 
-    bool canSend() {
-        return nextSeqNum < base + windowSize && nextSeqNum < totalFrames;
-    }
+void selectiveRepeat(int totalFrames, int windowSize) {
+    vector<bool> ackReceived(totalFrames + 1, false);
+    int base = 1, nextSeqNum = 1, totalSent = 0;
 
-    void sendFrame(Peer &receiver) {
-        if (canSend()) {
-            cout << name << " sending Frame " << frames[nextSeqNum].seq << endl;
-            if (rand() % 100 < 20) {
-                cout << "   (Frame " << frames[nextSeqNum].seq << " LOST)" << endl;
-            } else {
-                receiver.receiveFrame(frames[nextSeqNum].seq, *this, nextSeqNum);
+    while (base <= totalFrames) {
+        while (nextSeqNum < base + windowSize && nextSeqNum <= totalFrames) {
+            if (!ackReceived[nextSeqNum]) {
+                cout << "Sending Frame " << nextSeqNum << "..." << endl;
+                totalSent++;
+                sleep_ms(300);
             }
             nextSeqNum++;
         }
-    }
 
-    void receiveFrame(int seqNum, Peer &sender, int index) {
-        cout << name << " received Frame " << seqNum << " from " << sender.name << endl;
-
-        if (selectiveRepeat) {
-            frames[index].received = true;
-            if (rand() % 100 < 20) {
-                cout << name << " tried to send ACK[" << seqNum << "] but it was LOST" << endl;
-            } else {
-                cout << name << " sending ACK[" << seqNum << "]" << endl;
-                sender.ackFrame(index, selectiveRepeat);
-            }
-
-            for (int i = base; i < index; i++) {
-                if (!frames[i].received) {
-                    cout << name << " sending NAK[" << frames[i].seq << "] (missing frame in SR)" << endl;
-                }
-            }
-
-        } else {
-            if (seqNum == frames[base].seq) {
-                if (rand() % 100 < 20) {
-                    cout << name << " tried to send ACK[" << seqNum << "] but it was LOST" << endl;
+        for (int i = base; i < base + windowSize && i <= totalFrames; i++) {
+            if (!ackReceived[i]) {
+                string f = ackOrTimeout();
+                if (f == "ACK") {
+                    cout << "Acknowledgment received for Frame " << i << endl;
+                    ackReceived[i] = true;
                 } else {
-                    cout << name << " sending ACK[" << seqNum << "]" << endl;
-                    sender.ackFrame(index, selectiveRepeat);
+                    cout << "Timeout for Frame " << i << "! Retransmitting..." << endl;
                 }
-            } else {
-                cout << name << " discarded Frame " << seqNum << " (out of order in GBN)" << endl;
-                cout << name << " sending NAK[" << frames[base].seq << "] (expected frame)" << endl;
+                sleep_ms(300);
             }
         }
+
+        while (base <= totalFrames && ackReceived[base]) base++;
+
+        if (base > totalFrames) break;
+
+        cout << "Current Window: [" << base << " - " << min(base + windowSize - 1, totalFrames) << "]\n" << endl;
+        sleep_ms(500);
     }
 
-    void ackFrame(int index, bool sr) {
-        cout << name << " received ACK[" << frames[index].seq << "]" << endl;
-        frames[index].acked = true;
-
-        int oldBase = base;
-        while (base < totalFrames && frames[base].acked) {
-            base++;
-        }
-
-        // Only prompt if the window actually shifted
-        if (base > oldBase) {
-            char cont;
-            cout << "\nWindow shifted. Do you want to continue? (y/n): ";
-            cin >> cont;
-            if (cont != 'y' && cont != 'Y') {
-                cout << "\nSimulation stopped by user.\n";
-                exit(0);
-            }
-        }
-    }
-
-    bool allAcked() {
-        return base >= totalFrames;
-    }
-
-    void timeout(Peer &receiver) {
-        cout << name << " TIMEOUT! Resending window..." << endl;
-        if (selectiveRepeat) {
-            for (int i = base; i < nextSeqNum; i++) {
-                if (!frames[i].acked) {
-                    cout << name << " retransmitting Frame " << frames[i].seq << endl;
-                    if (rand() % 100 < 20) {
-                        cout << "   (Frame " << frames[i].seq << " LOST again)" << endl;
-                    } else {
-                        receiver.receiveFrame(frames[i].seq, *this, i);
-                    }
-                }
-            }
-        } else {
-            for (int i = base; i < nextSeqNum; i++) {
-                cout << name << " retransmitting Frame " << frames[i].seq << endl;
-                if (rand() % 100 < 20) {
-                    cout << "   (Frame " << frames[i].seq << " LOST again)" << endl;
-                } else {
-                    receiver.receiveFrame(frames[i].seq, *this, i);
-                }
-            }
-        }
-    }
-};
+    cout << "Total frames sent (including retransmissions): " << totalSent << endl;
+}
 
 int main() {
     srand(time(0));
-
-    int m, choice;
-    cout << "Enter m (number of bits for sequence number): ";
+    int m, n;
+    cout << "Enter m: ";
     cin >> m;
-    cout << "1) Go-Back-N\n2) Selective Repeat\nChoice: ";
-    cin >> choice;
 
-    bool selectiveRepeat = (choice == 2);
+    do {
+        int i = 1, tf, N, tt = 0;
+        cout << "Choose the ARQ protocol: 1. Go-Back-N 2. Selective Repeat 3. Exit: ";
+        cin >> n;
 
-    Peer A("PeerA", m, selectiveRepeat);
-    Peer B("PeerB", m, selectiveRepeat);
-
-    cout << "\nProtocol Selected: " << (selectiveRepeat ? "Selective Repeat" : "Go-Back-N") << endl;
-    cout << "Window Size = " << A.windowSize << endl;
-    cout << "Total Frames = " << A.totalFrames << endl;
-    cout << "Simulating transmission...\n\n";
-
-    while (!A.allAcked() || !B.allAcked()) {
-        if (!A.allAcked()) {
-            if (A.canSend()) A.sendFrame(B);
-            else A.timeout(B);
+        if (n == 1) {
+            cout << "Enter the Total number of frames: ";
+            cin >> tf;
+            N = pow(2, m) - 1;
+            cout << "\nWindow Size : " << N << endl;
+            transmission(i, N, tf, tt);
         }
 
-        if (!B.allAcked()) {
-            if (B.canSend()) B.sendFrame(A);
-            else B.timeout(A);
+        if (n == 2) {
+            cout << "Enter the Total number of frames: ";
+            cin >> tf;
+            N = pow(2, m - 1);
+            cout << "\nWindow Size : " << N << endl;
+            selectiveRepeat(tf, N);
         }
+    } while (n != 3);
 
-        usleep(300000); // simulate delay
-    }
-
-    cout << "\nAll frames acknowledged for both peers. Transmission complete!" << endl;
     return 0;
 }
-
