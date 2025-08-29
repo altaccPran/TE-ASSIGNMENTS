@@ -1,142 +1,102 @@
 #include <iostream>
-#include <vector>
 #include <string>
-#include <cstdlib>  // for rand()
-#include <ctime>    // for time()
-
+#include <bitset>
+#include <cstdlib>
+#include <ctime>
 using namespace std;
 
-void divide(const vector<int>& n, const vector<int>& k, vector<int>& ans, vector<int>& rem) {
-    int i = 0;
-    rem.clear();
-    ans.clear();
+string crcdiv(string data, const string &gen) {
+    int genLen = gen.size();
+    string syndrome = data.substr(0, genLen);
 
-    // Initialize rem with the first k.size() bits from n
-    for (int y = 0; y < (int)k.size(); y++) {
-        rem.push_back(n[y]);
-        i++;
+    for (int i = genLen; i <= data.size(); i++) {
+        if (syndrome[0] == '1') {
+            for (int j = 0; j < genLen; j++)
+                syndrome[j] = (syndrome[j] == gen[j]) ? '0' : '1';
+        } else {
+            for (int j = 0; j < genLen; j++)
+                syndrome[j] = (syndrome[j] == '0') ? '0' : '1';
+        }
+        syndrome.erase(0, 1);
+        if (i < data.size())
+            syndrome.push_back(data[i]);
     }
+    return syndrome;
+}
 
-    while (i < (int)n.size()) {
-        if (rem[0] == 1) {
-            ans.push_back(1);
-            for (int j = 0; j < (int)k.size(); j++) {
-                int xor_val = k[j] ^ rem[j];
-                rem[j] = xor_val;
-            }
-            if (rem[0] == 0) {
-                for (int x = 0; x < (int)rem.size() - 1; x++) {
-                    rem[x] = rem[x + 1];
-                }
-            }
-        }
-        else if (rem[0] == 0) {
-            ans.push_back(0);
-            for (int j = 0; j < (int)k.size(); j++) {
-                int xor_val = rem[j] ^ 0;
-                rem[j] = xor_val;
-            }
-            if (rem[0] == 0) {
-                for (int x = 0; x < (int)rem.size() - 1; x++) {
-                    rem[x] = rem[x + 1];
-                }
-            }
-        }
-        rem[rem.size() - 1] = n[i];
-        i++;
-    }
+string crcencode(string data, const string &gen) {
+    data.append(gen.size() - 1, '0');
+    return crcdiv(data, gen);
+}
 
-    if (rem[0] == 1) {
-        ans.push_back(1);
-        for (int j = 0; j < (int)k.size(); j++) {
-            int xor_val = k[j] ^ rem[j];
-            rem[j] = xor_val;
-        }
-    }
-    else if (rem[0] == 0) {
-        ans.push_back(0);
-        for (int j = 0; j < (int)k.size(); j++) {
-            int xor_val = rem[j] ^ 0;
-            rem[j] = xor_val;
-        }
-    }
-
-    cout << "Syndrome: ";
-    for (int bit : rem) cout << bit;
-    cout << "\n";
+string crccheck(string codeword, const string &gen) {
+    return crcdiv(codeword, gen);
 }
 
 int main() {
-    vector<int> n;
-    vector<int> k = {1, 0, 1, 0, 1};
+    srand(time(0));
 
-    cout << "Enter data: ";
-    string data;
-    getline(cin, data);
+    string generator;
+    cout << "Enter generator polynomial (binary): ";
+    cin >> generator;
 
-    // Convert string to ASCII sum
-    int v = 0;
-    for (char c : data) {
-        v += static_cast<int>(c);
-    }
+    int zeros;
+    cout << "Enter no. of zeroes to augment: ";
+    cin >> zeros;
 
-    // Convert to binary string
-    string binary = "";
-    int temp = v;
-    if (temp == 0) binary = "0";
-    while (temp > 0) {
-        binary = (temp % 2 == 0 ? "0" : "1") + binary;
-        temp /= 2;
-    }
+    cin.ignore();
+    string input;
+    cout << "Enter string: ";
+    getline(cin, input);
 
-    // Fill vector n with bits
-    for (char c : binary) {
-        n.push_back(c - '0');
-    }
+    cout << "\n<Sender's Side>\n";
 
-    // Append zeros for CRC bits
-    for (size_t i = 0; i < k.size() - 1; i++) {
-        n.push_back(0);
-    }
+    // Process each character separately
+    for (char c : input) {
+        string binChar = bitset<7>(c).to_string();
 
-    cout << "Data: ";
-    for (int bit : n) cout << bit;
-    cout << "\n";
+        cout << "\nCharacter: " << c << endl;
+        cout << "ASCII value: " << (int)c << endl;
+        cout << "Binary value: " << binChar << endl;
 
-    cout << "Generator: ";
-    for (int bit : k) cout << bit;
-    cout << "\n";
+        string remainder = crcencode(binChar, generator);
+        cout << "CRC remainder: " << remainder << endl;
 
-    vector<int> ans, rem;
-    divide(n, k, ans, rem);
+        string codeword = binChar + remainder;
+        cout << "Codeword to be sent = " << codeword << endl;
 
-    // Add remainder bits to n
-    int lengthn = (int)n.size();
-    int lengthk = (int)k.size();
-    int z = 0;
-    for (int f = lengthn - 1; f > lengthn - lengthk; f--) {
-        n[f] = rem[z];
-        z++;
-    }
+        cout << "\n<Receiver's Side>\n";
+        char choice;
+        cout << "Do you want to induce error (y/n)? ";
+        cin >> choice;
 
-    cout << "Do you want to add error?\n1-->Yes\n2-->No\n";
-    int ch; 
-    cin >> ch;
+        string received = codeword;
 
-    srand(time(nullptr)); // Seed random generator
+        if (choice == 'y' || choice == 'Y') {
+            // flip a random bit in this character’s codeword
+            int bitPos = rand() % received.size();
+            received[bitPos] = (received[bitPos] == '0') ? '1' : '0';
+            cout << "\nRandom error generated!" << endl;
+            cout << "Received Codeword = " << received << endl;
 
-    if (ch == 1) {
-        int r = rand() % lengthn;
-        cout << "Bit changed at position " << r + 1 << "\n";
-        n[r] = 1 - n[r];  // Flip the bit
+            string syndrome = crccheck(received, generator);
+            cout << "Syndrome after error: " << syndrome << endl;
+            cout << "Therefore this is error → CRC failed.\n";
+        } else {
+            cout << "\nNo error induced." << endl;
+            cout << "Received Codeword = " << received << endl;
 
-        vector<int> ans1, rem1;
-        divide(n, k, ans1, rem1);
-        cout << "Error detected\n";
-    }
-    else if (ch == 2) {
-        vector<int> ans2, rem2;
-        divide(n, k, ans2, rem2);
+            string syndrome = crccheck(received, generator);
+            cout << "Syndrome = " << syndrome << endl;
+            if (stoi(syndrome, nullptr, 2) == 0) {
+                cout << "There is no error." << endl;
+                string dataword = received.substr(0, received.size() - (generator.size() - 1));
+                cout << "Fetch the dataword: " << endl;
+                cout << "Binary no: " << dataword << endl;
+                char decoded = static_cast<char>(bitset<7>(dataword).to_ulong());
+                cout << "Alphabet: " << decoded << endl;
+            }
+        }
     }
 
     return 0;
