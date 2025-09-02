@@ -1,54 +1,47 @@
-#include <unordered_map>
-#include <string>
-#include <vector>
+#include "symbol_table.h"
 #include <iostream>
 #include <fstream>
 
-class SymbolTable {
-private:
-    std::unordered_map<std::string, int> table;
-    std::vector<std::string> order; // preserve insertion order for printing
-
-public:
-    void setSymbol(const std::string &symbol, int address) {
-        if (table.find(symbol) == table.end()) {
-            table[symbol] = address;
-            order.push_back(symbol);
-        } else {
-            // Update address if redefined
-            table[symbol] = address;
-        }
+void SymbolTable::setSymbol(const std::string &symbol, int address) {
+    if (table.find(symbol) == table.end()) {
+        table[symbol] = address;
+        order.push_back(symbol);
+    } else {
+        table[symbol] = address;
     }
+}
 
-    bool find(const std::string &symbol) const {
-        return table.find(symbol) != table.end();
-    }
+bool SymbolTable::find(const std::string &symbol) const {
+    return table.find(symbol) != table.end();
+}
 
-    int getSymbolAddress(const std::string &symbol) const {
-        auto it = table.find(symbol);
-        if (it != table.end()) {
-            return it->second;
-        }
-        return -1; // undefined
-    }
+int SymbolTable::getSymbolAddress(const std::string &symbol) const {
+    auto it = table.find(symbol);
+    return (it != table.end()) ? it->second : -1;
+}
 
-    int getSymbolIndex(const std::string &symbol) const {
-        for (size_t i = 0; i < order.size(); i++) {
-            if (order[i] == symbol) return static_cast<int>(i);
-        }
-        return -1; // not found
-    }
+int SymbolTable::getSymbolIndex(const std::string &symbol) const {
+    for (size_t i = 0; i < order.size(); i++)
+        if (order[i] == symbol) return static_cast<int>(i);
+    return -1;
+}
 
-    void print() const {
-        for (size_t i = 0; i < order.size(); i++) {
-            std::cout << i << "\t" << order[i] << "\t" << table.at(order[i]) << "\n";
-        }
-    }
+int SymbolTable::getSymbolAddressByIndex(int index) const {
+    return (index >= 0 && index < static_cast<int>(order.size())) ?
+        table.at(order[index]) : -1;
+}
 
-    void saveTable(const std::string &filepath) const {
-        std::ofstream out(filepath);
-        for (size_t i = 0; i < order.size(); i++) {
+void SymbolTable::print() const {
+    std::cout << "Index\tSymbol\tAddress\n";
+    for (size_t i = 0; i < order.size(); i++)
+        std::cout << i << "\t" << order[i] << "\t" << table.at(order[i]) << "\n";
+}
+
+void SymbolTable::saveTable(const std::string &filepath) const {
+    std::ofstream out(filepath);
+    if (out.is_open()) {
+        for (size_t i = 0; i < order.size(); i++)
             out << i << "\t" << order[i] << "\t" << table.at(order[i]) << "\n";
-        }
+        out.close();
     }
-};
+}
