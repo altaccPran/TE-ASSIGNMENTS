@@ -1,18 +1,35 @@
 #include <iostream>
-#include "pass1.cpp" // include your AssemblerPass1 header/source
+#include "pass1.h"
+#include "pass2.h"
 
 int main() {
-    // Create assembler object with file paths
-    AssemblerPass1 assembler(
-        "input.asm",     // Assembly source file
-        "IC.txt",        // Intermediate code output
-        "SYMTAB.txt",    // Symbol table output
-        "LITTAB.txt"     // Literal table output
-    );
+    const std::string source = "input.asm";
+    const std::string ic = "IC.txt";
+    const std::string sym = "SYMTAB.txt";
+    const std::string lit = "LITTAB.txt";
+    const std::string machine = "MACHINE_CODE.txt";
 
-    // Run Pass 1
-    assembler.performPass();
+    std::cout << "Starting Two-Pass Assembler...\n\n";
 
-    std::cout << "\nPass 1 completed. Check IC.txt, SYMTAB.txt, and LITTAB.txt\n";
+    try {
+        AssemblerPass1 pass1(source, ic, sym, lit);
+        pass1.performPass();
+
+        std::cout << "\nPass 1 completed. Files generated:\n"
+                  << "  - " << ic << "\n"
+                  << "  - " << sym << "\n"
+                  << "  - " << lit << "\n\n";
+
+        AssemblerPass2 pass2(ic, sym, lit, machine);
+        pass2.performPass();
+
+        std::cout << "\nPass 2 completed. File generated:\n"
+                  << "  - " << machine << "\n";
+                  
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
+
     return 0;
 }
