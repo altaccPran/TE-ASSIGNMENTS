@@ -1,0 +1,4 @@
+START
+INCR A
+SWAP M,N
+END
