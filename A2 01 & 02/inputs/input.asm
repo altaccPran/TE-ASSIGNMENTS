@@ -1,0 +1,16 @@
+START
+MACRO
+INCR &A
+&A = &A + 1
+MEND
+
+MACRO
+SWAP &X,&Y
+TEMP = &X
+&X = &Y
+&Y = TEMP
+MEND
+
+INCR A
+SWAP M,N
+END
