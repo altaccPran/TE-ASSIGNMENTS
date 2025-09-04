@@ -1,0 +1,6 @@
+START
+A = A + 1
+TEMP = M
+M = N
+N = TEMP
+END
