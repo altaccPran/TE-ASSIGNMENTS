@@ -1,0 +1,8 @@
+START
+DATA1 5
+DATA2 10
+; Call a simple increment
+INCR DATA1
+; Now call a macro that itself calls another macro
+DOUBLEINCR DATA2
+END

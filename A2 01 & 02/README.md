@@ -29,8 +29,8 @@ A2 01 & 02/
 From inside the `A2 01 & 02` folder:
 
 ```bash
-g++ -std=c++17 -O2 2-pass-macro.cpp -o macro_processor
-./macro_processor
+g++ -std=c++17 -O2 2-pass-macro.cpp -o solu
+./solu
 ```
 - Input file: `inputs/input.asm`
 - Pass-I output files: `outputs/MNT.txt`, `outputs/MDT.txt`, `outputs/IC.txt`

@@ -1,0 +1,3 @@
+INCR 0   &A
+DOUBLEINCR 2   &X
+NESTED 7   &P,&Q

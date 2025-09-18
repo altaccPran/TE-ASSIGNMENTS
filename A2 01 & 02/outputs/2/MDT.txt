@@ -1,0 +1,12 @@
+0 &A = &A + 1
+1 MEND
+2 ; First increment
+3 INCR &X
+4 ; Increment again
+5 INCR &X
+6 MEND
+7 ; Call a simple increment
+8 INCR &P
+9 ; Now call a macro that itself calls another macro
+10 DOUBLEINCR &Q
+11 MEND
