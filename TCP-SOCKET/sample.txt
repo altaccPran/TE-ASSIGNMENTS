@@ -1,0 +1,4 @@
+I have created this file to test 
+client server connectivity on the same pc.
+
+This code is compatible to Windows & Linux.
