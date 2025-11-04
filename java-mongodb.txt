@@ -1,0 +1,28 @@
+//import com.mongodb.client.MongoClient;
+//import com.mongodb.client.MongoClients;
+//import com.mongodb.client.MongoCollection;
+//import com.mongodb.client.MongoDatabase;
+
+import org.bson.Document;
+
+//import com.mongodb.client.MongoClients;
+import com.mongodb.client.*;
+public class class1 {
+
+	public static void main(String[] args) {
+		String connstring = "mongodb://te31435:te31435@10.10.8.119:27017/?authSource=te31435_db";
+		MongoClient mognoclient = MongoClients.create(connstring);
+		MongoDatabase db = mognoclient.getDatabase("te31435_db");
+		System.out.print("Connected to db");
+
+		MongoCollection<Document>collection = db.getCollection("collection1");
+		Document doc = new Document("name","Sharv");
+		collection.insertOne(doc);
+		System.out.print("inserted");
+		
+		for (Document doc1 : collection.find()) {
+			System.out.print(doc.toJson());
+		}
+	}
+
+}
