@@ -1,0 +1,77 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        String url = "jdbc:mysql://localhost:3306/temp?useSSL=false&serverTimezone=UTC";
+        String user = "root";
+        String pass = "Hero";
+
+        try (Connection conn = DriverManager.getConnection(url, user, pass);
+             Scanner sc = new Scanner(System.in)) {
+
+            System.out.println("Connected to MySQL!");
+
+            // INSERT
+            System.out.print("Enter employee name: ");
+            String name = sc.nextLine();
+            System.out.print("Enter department: ");
+            String dept = sc.nextLine();
+            System.out.print("Enter salary: ");
+            double salary = sc.nextDouble();
+
+            String insertSQL = "INSERT INTO employees (name, department, salary) VALUES (?, ?, ?)";
+            PreparedStatement psInsert = conn.prepareStatement(insertSQL);
+            psInsert.setString(1, name);
+            psInsert.setString(2, dept);
+            psInsert.setDouble(3, salary);
+            int rowsInserted = psInsert.executeUpdate();
+            System.out.println(rowsInserted + " row(s) inserted.");
+
+            // UPDATE
+            String updateSQL = "UPDATE employees SET salary = ? WHERE name = ?";
+            PreparedStatement psUpdate = conn.prepareStatement(updateSQL);
+            psUpdate.setDouble(1, 75000);
+            psUpdate.setString(2, name);
+            int rowsUpdated = psUpdate.executeUpdate();
+            System.out.println(rowsUpdated + " row(s) updated.");
+
+            // DELETE
+            String deleteSQL = "DELETE FROM employees WHERE salary < ?";
+            PreparedStatement psDelete = conn.prepareStatement(deleteSQL);
+            psDelete.setDouble(1, 30000);
+            int rowsDeleted = psDelete.executeUpdate();
+            System.out.println(rowsDeleted + " row(s) deleted.");
+
+            // DISPLAY ALL
+            String selectAllSQL = "SELECT * FROM employees";
+            PreparedStatement psSelectAll = conn.prepareStatement(selectAllSQL);
+            ResultSet rsAll = psSelectAll.executeQuery();
+            System.out.println("\nAll Employees:");
+            while (rsAll.next()) {
+                System.out.println(rsAll.getInt("id") + " | " +
+                        rsAll.getString("name") + " | " +
+                        rsAll.getString("department") + " | " +
+                        rsAll.getDouble("salary"));
+            }
+
+            // DISPLAY WITH CONDITION
+            String selectCondSQL = "SELECT * FROM employees WHERE department = ?";
+            PreparedStatement psSelectCond = conn.prepareStatement(selectCondSQL);
+            psSelectCond.setString(1, "CE");
+            ResultSet rsCond = psSelectCond.executeQuery();
+            System.out.println("\nEmployees from CE Department:");
+            while (rsCond.next()) {
+                System.out.println(rsCond.getInt("id") + " | " +
+                        rsCond.getString("name") + " | " +
+                        rsCond.getDouble("salary"));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
