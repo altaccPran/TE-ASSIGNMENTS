@@ -1,77 +1,109 @@
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+package demo;
+
+import java.sql.*;
 import java.util.Scanner;
 
-public class Main {
-    public static void main(String[] args) {
-        String url = "jdbc:mysql://localhost:3306/temp?useSSL=false&serverTimezone=UTC";
-        String user = "root";
-        String pass = "Hero";
+public class sqlconnectivity {
+    public static void main(String[] args) throws Exception {
+        String url = "jdbc:mysql://10.10.8.119:3306/te31134_db?useSSL=false";
+        String user = "te31134";
+        String password = "te31134";
 
-        try (Connection conn = DriverManager.getConnection(url, user, pass);
-             Scanner sc = new Scanner(System.in)) {
+        Connection conn = DriverManager.getConnection(url, user, password);
+        Scanner scanner = new Scanner(System.in);
 
-            System.out.println("Connected to MySQL!");
+        while (true) {
+            System.out.println("\nEnter your choice:");
+            System.out.println("1. Insert");
+            System.out.println("2. Update");
+            System.out.println("3. Delete");
+            System.out.println("4. Display");
+            System.out.println("5. Exit");
+            String input = scanner.nextLine().trim();
+            int choice;
+            choice = Integer.parseInt(input);
 
-            // INSERT
-            System.out.print("Enter employee name: ");
-            String name = sc.nextLine();
-            System.out.print("Enter department: ");
-            String dept = sc.nextLine();
-            System.out.print("Enter salary: ");
-            double salary = sc.nextDouble();
+            switch (choice) {
+                case 1:
+                    System.out.println("Enter name:");
+                    String name = scanner.nextLine().trim();
+                    System.out.println("Enter age:");
+                    int age = Integer.parseInt(scanner.nextLine().trim());
+                    System.out.println("Enter marks:");
+                    int marks = Integer.parseInt(scanner.nextLine().trim());
+                    String insertSQL = "INSERT INTO students (name, age, marks) VALUES (?, ?, ?)";
+                    PreparedStatement ps1 = conn.prepareStatement(insertSQL);
+                    ps1.setString(1, name);
+                    ps1.setInt(2, age);
+                    ps1.setInt(3, marks);
+                    ps1.executeUpdate();
+                    System.out.println("Inserted Successfully");
+                    ps1.close();
+                    break;
 
-            String insertSQL = "INSERT INTO employees (name, department, salary) VALUES (?, ?, ?)";
-            PreparedStatement psInsert = conn.prepareStatement(insertSQL);
-            psInsert.setString(1, name);
-            psInsert.setString(2, dept);
-            psInsert.setDouble(3, salary);
-            int rowsInserted = psInsert.executeUpdate();
-            System.out.println(rowsInserted + " row(s) inserted.");
+                case 2:
+                    System.out.println("Enter name to be updated:");
+                    String oldName = scanner.nextLine().trim();
+                    System.out.println("Enter new age:");
+                    int newAge = Integer.parseInt(scanner.nextLine().trim());
+                    System.out.println("Enter new marks:");
+                    int newMarks = Integer.parseInt(scanner.nextLine().trim());
+                    String updateSQL = "UPDATE students SET age = ?, marks = ? WHERE name = ?";
+                    PreparedStatement ps2 = conn.prepareStatement(updateSQL);
+                    ps2.setInt(1, newAge);
+                    ps2.setInt(2, newMarks);
+                    ps2.setString(3, oldName);
+                    int rows2 = ps2.executeUpdate();
+                    if (rows2 > 0)
+                        System.out.println("Updated Successfully");
+                    else
+                        System.out.println("No record found with name: " + oldName);
+                    ps2.close();
+                    break;
 
-            // UPDATE
-            String updateSQL = "UPDATE employees SET salary = ? WHERE name = ?";
-            PreparedStatement psUpdate = conn.prepareStatement(updateSQL);
-            psUpdate.setDouble(1, 75000);
-            psUpdate.setString(2, name);
-            int rowsUpdated = psUpdate.executeUpdate();
-            System.out.println(rowsUpdated + " row(s) updated.");
+                case 3:
+                    System.out.println("Enter name to be deleted:");
+                    String delName = scanner.nextLine().trim();
+                    String deleteSQL = "DELETE FROM students WHERE name = ?";
+                    PreparedStatement ps3 = conn.prepareStatement(deleteSQL);
+                    ps3.setString(1, delName);
+                    int rows3 = ps3.executeUpdate();
+                    if (rows3 > 0)
+                        System.out.println("Deleted Successfully");
+                    else
+                        System.out.println("No record found with name: " + delName);
+                    ps3.close();
+                    break;
 
-            // DELETE
-            String deleteSQL = "DELETE FROM employees WHERE salary < ?";
-            PreparedStatement psDelete = conn.prepareStatement(deleteSQL);
-            psDelete.setDouble(1, 30000);
-            int rowsDeleted = psDelete.executeUpdate();
-            System.out.println(rowsDeleted + " row(s) deleted.");
+                case 4:
+                    String selectSQL = "SELECT * FROM students";
+                    Statement st = conn.createStatement();
+                    ResultSet rs = st.executeQuery(selectSQL);
+                    boolean found = false;
+                    while (rs.next()) {
+                        found = true;
+                        System.out.println(
+                            "Name: " + rs.getString("name") +
+                            ", Age: " + rs.getInt("age") +
+                            ", Marks: " + rs.getInt("marks")
+                        );
+                    }
+                    if (!found)
+                        System.out.println("No records found.");
+                    rs.close();
+                    st.close();
+                    break;
 
-            // DISPLAY ALL
-            String selectAllSQL = "SELECT * FROM employees";
-            PreparedStatement psSelectAll = conn.prepareStatement(selectAllSQL);
-            ResultSet rsAll = psSelectAll.executeQuery();
-            System.out.println("\nAll Employees:");
-            while (rsAll.next()) {
-                System.out.println(rsAll.getInt("id") + " | " +
-                        rsAll.getString("name") + " | " +
-                        rsAll.getString("department") + " | " +
-                        rsAll.getDouble("salary"));
+                case 5:
+                    System.out.println("Exited the program");
+                    scanner.close();
+                    conn.close();
+                    return;
+
+                default:
+                    System.out.println("Invalid Choice. Try Again");
+                    break;
             }
-
-            // DISPLAY WITH CONDITION
-            String selectCondSQL = "SELECT * FROM employees WHERE department = ?";
-            PreparedStatement psSelectCond = conn.prepareStatement(selectCondSQL);
-            psSelectCond.setString(1, "CE");
-            ResultSet rsCond = psSelectCond.executeQuery();
-            System.out.println("\nEmployees from CE Department:");
-            while (rsCond.next()) {
-                System.out.println(rsCond.getInt("id") + " | " +
-                        rsCond.getString("name") + " | " +
-                        rsCond.getDouble("salary"));
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }
