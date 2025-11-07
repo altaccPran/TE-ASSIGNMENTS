@@ -1,0 +1,32 @@
+// CREATE COLLECTION
+db.createCollection("movies");
+
+// INSERT DOCUMENTS
+db.movies.insertMany([
+{movie_id:"SHWSHNK94",title:"The Shawshank Redemption",director:{fname:"Frank",mname:"",lname:"Darabont"},genre:"Drama",release_year:1994,box_office_gross_usd:58500000,formats:["DVD","Blu-ray","Streaming"],production_company:[{company_name:"Castle Rock Entertainment",headquarters:"Beverly Hills, USA"}],runtime_minutes:142},
+{movie_id:"GDFTHR72",title:"The Godfather",director:{fname:"Francis",mname:"Ford",lname:"Coppola"},genre:"Crime",release_year:1972,box_office_gross_usd:246000000,formats:["DVD","Blu-ray","Restored Edition"],production_company:[{company_name:"Paramount Pictures",headquarters:"Hollywood, USA"}],runtime_minutes:175},
+{movie_id:"DRKKNGHT08",title:"The Dark Knight",director:{fname:"Christopher",mname:"",lname:"Nolan"},genre:"Action",release_year:2008,box_office_gross_usd:1004900000,formats:["IMAX","Blu-ray","Streaming"],production_company:[{company_name:"Warner Bros.",headquarters:"Burbank, USA"}],runtime_minutes:152},
+{movie_id:"PULPFCTN94",title:"Pulp Fiction",director:{fname:"Quentin",mname:"",lname:"Tarantino"},genre:"Crime",release_year:1994,box_office_gross_usd:213900000,formats:["DVD","Collector's Edition","Streaming"],production_company:[{company_name:"Miramax",headquarters:"Los Angeles, USA"},{company_name:"A Band Apart",headquarters:"Hollywood, USA"}],runtime_minutes:154},
+{movie_id:"INCPT10",title:"Inception",director:{fname:"Christopher",mname:"",lname:"Nolan"},genre:"Sci-Fi",release_year:2010,box_office_gross_usd:829900000,formats:["Blu-ray","4K UHD","Streaming"],production_company:[{company_name:"Legendary Pictures",headquarters:"Burbank, USA"}],runtime_minutes:148},
+{movie_id:"FGUMP94",title:"Forrest Gump",director:{fname:"Robert",mname:"",lname:"Zemeckis"},genre:"Drama",release_year:1994,box_office_gross_usd:678200000,formats:["DVD","Blu-ray","20th Anniversary Edition"],production_company:[{company_name:"Paramount Pictures",headquarters:"Hollywood, USA"}],runtime_minutes:142},
+{movie_id:"PRST06",title:"The Prestige",director:{fname:"Christopher",mname:"",lname:"Nolan"},genre:"Mystery",release_year:2006,box_office_gross_usd:109700000,formats:["DVD","Streaming"],production_company:[{company_name:"Touchstone Pictures",headquarters:"Burbank, USA"}],runtime_minutes:130},
+{movie_id:"PRSTE19",title:"Parasite",director:{fname:"Bong",mname:"Joon",lname:"Ho"},genre:"Thriller",release_year:2019,box_office_gross_usd:258700000,formats:["Blu-ray","Streaming","Criterion Collection"],production_company:[{company_name:"Barunson E&A",headquarters:"Seoul, South Korea"}],runtime_minutes:132}
+]);
+
+// FIND ALL
+db.movies.find();
+
+// FIND WITH OR CONDITION (Sci-Fi OR Director Nolan)
+db.movies.find({$or:[{genre:"Sci-Fi"},{"director.lname":"Nolan"}]});
+
+// UPDATE ONE (Set box office + Push new format)
+db.movies.updateOne({movie_id:"SHWSHNK94"},{$set:{box_office_gross_usd:60000000},$push:{formats:"4K Remastered"}});
+
+// DELETE ONE
+db.movies.deleteOne({movie_id:"PULPFCTN94"});
+
+// DELETE MANY (Movies before 1990)
+db.movies.deleteMany({release_year:{$lt:1990}});
+
+// VERIFY
+db.movies.find({movie_id:"SHWSHNK94"});
