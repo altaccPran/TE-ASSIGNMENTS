@@ -1,121 +1,93 @@
 #include <iostream>
-#include <vector>
-#include <algorithm>
-
 using namespace std;
 
-struct Process
-{
-    int id;
-    bool active;
-};
+/* -------------------- BULLY ALGORITHM -------------------- */
+void bullyElection() {
+    int n, crashed, starter;
+    cout << "\n--- Bully Algorithm ---\n";
+    cout << "Enter number of processes: ";
+    cin >> n;
 
-// --- 1. BULLY ALGORITHM ---
-// Concept: The highest active process "bullies" everyone else to become leader.
-void runBully(vector<Process> &processes, int initiatorIndex)
-{
-    int n = processes.size();
-    int currentID = processes[initiatorIndex].id;
+    int alive[20];
 
-    cout << "\n--- Process " << currentID << " initiates Election ---\n";
+    cout << "Enter crashed process id: ";
+    cin >> crashed;
 
-    vector<int> responders; // Store who responded
+    // Mark alive processes
+    for (int i = 1; i <= n; i++)
+        alive[i] = (i == crashed) ? 0 : 1;
 
-    // 1. Broadcast ELECTION to ALL higher processes
-    for (int i = 0; i < n; i++)
-    {
-        if (processes[i].id > currentID)
-        {
-            cout << "  Process " << currentID << " sends ELECTION -> Process " << processes[i].id;
+    cout << "Election started by: ";
+    cin >> starter;
 
-            if (processes[i].active)
-            {
-                cout << " [OK]\n";
-                responders.push_back(i);
-            }
-            else
-            {
-                cout << " [FAILED]\n";
-            }
+    cout << "\nMessages sent:\n";
+    for (int i = starter + 1; i <= n; i++) {
+        cout << starter << " → " << i;
+        if (alive[i]) cout << " (OK)\n";
+        else cout << " (No reply)\n";
+    }
+
+    // Highest alive process becomes coordinator
+    int coordinator = -1;
+    for (int i = n; i >= 1; i--) {
+        if (alive[i]) {
+            coordinator = i;
+            break;
         }
     }
 
-    // 2. Analyze results
-    if (responders.empty())
-    {
-        // Case A: No one higher is alive. I am the boss.
-        cout << ">>> Process " << currentID << " received no OKs.\n";
-        cout << ">>> Process " << currentID << " becomes COORDINATOR! 👑\n";
+    cout << "\nNew Coordinator = Process " << coordinator << "\n";
+}
 
-        // (Optional: Broadcast "I am Coordinator" to lower nodes here)
-    }
+
+/* -------------------- RING ALGORITHM -------------------- */
+void ringElection() {
+    int n, initiator;
+    cout << "\n--- Ring Algorithm ---\n";
+    cout << "Enter number of processes in ring: ";
+    cin >> n;
+
+    int pid[20];
+    cout << "Enter process IDs in ring order:\n";
+    for (int i = 0; i < n; i++)
+        cin >> pid[i];
+
+    cout << "Enter initiator index (0 to n-1): ";
+    cin >> initiator;
+
+    int maxId = pid[initiator];
+    int i = initiator;
+
+    cout << "\nToken passing sequence:\n";
+    do {
+        cout << pid[i] << " → ";
+        if (pid[i] > maxId)
+            maxId = pid[i];
+
+        i = (i + 1) % n;
+    } while (i != initiator);
+
+    cout << "BACK\n";
+    cout << "\nNew Coordinator = Process " << maxId << "\n";
+}
+
+
+/* -------------------- MAIN -------------------- */
+int main() {
+    int choice;
+
+    cout << "\nElection Algorithms Simulation";
+    cout << "\n1. Bully Algorithm";
+    cout << "\n2. Ring Algorithm";
+    cout << "\nEnter choice: ";
+    cin >> choice;
+
+    if (choice == 1)
+        bullyElection();
+    else if (choice == 2)
+        ringElection();
     else
-    {
-        // Case B: Higher nodes are alive. They take over.
-        cout << ">>> Process " << currentID << " received OKs. Stopping election.\n";
-
-        // strictly speaking, ALL responders start an election.
-        // To keep output readable, we recursively simulate just the next active node
-        // (since it will eventually message the others anyway).
-        runBully(processes, responders[0]);
-    }
-}
-// --- 2. RING ALGORITHM ---
-// Concept: A token moves in a circle. Active nodes add their ID to the list.
-void runRing(vector<Process> &processes, int initiatorIndex)
-{
-    int n = processes.size();
-    cout << "\n--- Ring Election Started by Process " << processes[initiatorIndex].id << " ---\n";
-
-    vector<int> activeList;
-
-    // Loop exactly 'n' times starting from the initiator
-    for (int i = 0; i < n; i++)
-    {
-        // Use modulo to wrap around the array (e.g., index 5 becomes 0)
-        int curr = (initiatorIndex + i) % n;
-
-        if (processes[curr].active)
-        {
-            activeList.push_back(processes[curr].id);
-            cout << "  Token passed to Process " << processes[curr].id << "\n";
-        }
-    }
-
-    // Find the highest ID in our list
-    int maxID = -1;
-    for (int id : activeList)
-    {
-        if (id > maxID)
-            maxID = id;
-    }
-
-    cout << ">>> Process " << maxID << " is the new COORDINATOR! 👑\n";
-}
-
-int main()
-{
-    // Setup: 5 processes. ID 50 is the highest.
-    // Topology: 10 -> 20 -> 30 -> 40 -> 50
-    vector<Process> processes = {
-        {10, true},
-        {20, true},
-        {30, true},
-        {40, true},
-        {50, true}};
-
-    // Scenario: The leader (50) crashes
-    processes[4].active = false;
-    cout << "Status: Process 50 has crashed.\n";
-
-    // Scenario: Process 20 notices the crash and starts election
-    int initiatorIndex = 1; // Index of ID 20
-
-    // Run Bully
-    runBully(processes, initiatorIndex);
-
-    // Run Ring
-    runRing(processes, initiatorIndex);
+        cout << "Invalid choice!";
 
     return 0;
 }
