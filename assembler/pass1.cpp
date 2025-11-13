@@ -1,271 +1,182 @@
-#include <bits/stdc++.h>
+#include <bits/stdc++.h>          // Includes all standard C++ libraries
 using namespace std;
 
-struct Symbol { int index; string name; int address; };
-struct Literal { int index; string literal; int address; };
-
-int main() {
-    ifstream fin("input.asm");
-    ofstream ic("intermediatecode.txt"), sym("symbtab.txt"), lit("literaltab.txt"), pool("pooltable.txt");
-    if(!fin){ cout<<"Input file not found!\n"; return 0; }
-
-    map<string,pair<string,string>> MOT = {
-        {"STOP",{"IS","00"}},{"ADD",{"IS","01"}},{"SUB",{"IS","02"}},
-        {"MULT",{"IS","03"}},{"MOVER",{"IS","04"}},{"MOVEM",{"IS","05"}},
-        {"COMP",{"IS","06"}},{"BC",{"IS","07"}},{"DIV",{"IS","08"}},
-        {"READ",{"IS","09"}},{"PRINT",{"IS","10"}}
+// ==================== CLASS: Assembler ====================
+class Assembler {
+    // ----------------- INSTRUCTION TABLES -----------------
+    // IS: Imperative Statements (actual machine instructions)
+    map<string, string> IS = {
+        {"STOP", "00"}, {"ADD", "01"}, {"SUB", "02"}, {"MULT", "03"},
+        {"MOVER", "04"}, {"MOVEM", "05"}, {"COMP", "06"},
+        {"BC", "07"}, {"DIV", "08"}, {"READ", "09"}, {"PRINT", "10"}
     };
 
-    map<string,string> AD = {{"START","01"},{"END","02"},{"ORIGIN","03"},{"EQU","04"},{"LTORG","05"}};
-    map<string,string> DL = {{"DC","01"},{"DS","02"}};
-    map<string,int> REG = {{"AREG",1},{"BREG",2},{"CREG",3},{"DREG",4}};
+    // AD: Assembler Directives (handled by assembler, not machine)
+    map<string, string> AD = {
+        {"START", "01"}, {"END", "02"}, {"ORIGIN", "03"},
+        {"EQU", "04"}, {"LTORG", "05"}
+    };
 
-    vector<Symbol> SYMTAB; 
-    vector<Literal> LITTAB;
-    vector<int> POOLTAB;
+    // DL: Declarative Statements (for data definition)
+    map<string, string> DL = {
+        {"DC", "01"}, {"DS", "02"}
+    };
 
-    int LC=0, symIndex=1, litIndex=1;
-    POOLTAB.push_back(0);
+    // REG: Register codes
+    map<string, int> REG = {
+        {"AREG", 1}, {"BREG", 2}, {"CREG", 3}, {"DREG", 4}
+    };
 
-    string line;
-    while(getline(fin,line)){
-        if(line.empty()) continue;
-        stringstream ss(line); 
-        vector<string> tokens; 
-        string token;
-        while(ss>>token) tokens.push_back(token); 
-        if(tokens.empty()) continue;
+    // ----------------- TABLES FOR PASS-1 -----------------
+    map<string, int> SYMTAB;          // Symbol table → label name + address
+    map<string, int> LITTAB;          // Literal table → literal name + address
+    vector<string> LITERAL_LIST;      // To preserve order of literals
+    vector<int> POOLTAB = {0};        // Starting index of each literal pool
 
-        int startIndex=0;
+    int LOCCTR = 0;                   // Location Counter (tracks memory address)
+    int POOL_PTR = 0;                 // Tracks literal pool index
 
-        // Check if it's EQU directive
-
-        //LABEL EQU (SYMBOL+5)--->expr
-       if (tokens.size() >= 3 && tokens[1] == "EQU") {
-            string label = tokens[0];
-            string expr = tokens[2];
-            int newAddr = 0;
-
-            // Case 1: Expression contains '+' or '-'
-            if (expr.find('+') != string::npos || expr.find('-') != string::npos) {
-                string sym = expr.substr(0, expr.find_first_of("+-"));
-                char op = expr[expr.find_first_of("+-")];
-                int val = stoi(expr.substr(expr.find_first_of("+-") + 1));
-
-                for (auto &s : SYMTAB) {
-                    if (s.name == sym) {
-                        if (op == '+') {
-                            newAddr = s.address + val;
-                        } else {
-                            newAddr = s.address - val;
-                        }
-                        break;
-                    }
-                }
-            } 
-            // Case 2: Expression is just a symbol
-            else {
-                for (auto &s : SYMTAB) {
-                    if (s.name == expr) {
-                        newAddr = s.address;
-                        break;
-                    }
-                }
-            }
-
-            // Add or update label in SYMTAB
-            bool exists = false;
-            for (auto &s : SYMTAB) {
-                if (s.name == label) {
-                    s.address = newAddr;
-                    exists = true;
-                    break;
-                }
-            }
-            if (!exists) {
-                SYMTAB.push_back({symIndex++, label, newAddr});
-            }
-            ic << setw(3) << LC << "\t(AD,04)\t(C," << newAddr << ")\n";
-            continue;
-        }
-
-
-        // Label (skip registers/literals)
-        if (MOT.find(tokens[0]) == MOT.end() && AD.find(tokens[0]) == AD.end() &&
-            DL.find(tokens[0]) == DL.end() && REG.find(tokens[0]) == REG.end() &&
-            tokens[0][0] != '=' && tokens[0] != "EQU") {
-
-            string label = tokens[0];
-            bool exists = false;
-
-            for (auto &s : SYMTAB) {
-                if (s.name == label) {
-                    s.address = LC;
-                    exists = true;
-                    break;
-                }
-            }
-
-            if (!exists) {
-                SYMTAB.push_back({symIndex++, label, LC});
-            }
-
-            startIndex = 1;
-        }
-
-
-        if(startIndex>=tokens.size()) continue;
-        string opcode=tokens[startIndex];
-
-        // AD
-        if (AD.find(opcode) != AD.end()) {
-            if (opcode == "START") {
-                LC = stoi(tokens[startIndex + 1]);
-                ic << setw(3) << LC << "\t(AD,01)\t(C," << LC << ")\n";
-            }
-            else if (opcode == "END" || opcode == "LTORG") {
-                // Assign LC to literals in current pool and generate DL statements
-                for (int i = POOLTAB.back(); i < LITTAB.size(); i++) {
-                    if (LITTAB[i].address == -1) {
-                        LITTAB[i].address = LC;
-                        ic << setw(3) << LC << "\t(DL,01)\t(L," << LITTAB[i].index << ")\n";
-                        LC++;
-                    }
-                }
-                if (LITTAB.size() != POOLTAB.back()) {
-                    POOLTAB.push_back(LITTAB.size());
-                }
-                ic << setw(3) << LC << "\t(AD," << AD[opcode] << ")\n";
-            }
-            else if (opcode == "ORIGIN") {
-                string expr = tokens[startIndex + 1];
-                int newLC = 0;
-
-                if (expr.find('+') != string::npos || expr.find('-') != string::npos) {
-                    string sym = expr.substr(0, expr.find_first_of("+-"));
-                    char op = expr[expr.find_first_of("+-")];
-                    int val = stoi(expr.substr(expr.find_first_of("+-") + 1));
-
-                    for (auto &s : SYMTAB) {
-                        if (s.name == sym) {
-                            if (op == '+') {
-                                newLC = s.address + val;
-                            } else {
-                                newLC = s.address - val;
-                            }
-                            break;
-                        }
-                    }
-                }
-                else {
-                    for (auto &s : SYMTAB) {
-                        if (s.name == expr) {
-                            newLC = s.address;
-                            break;
-                        }
-                    }
-                }
-
-                ic << setw(3) << LC << "\t(AD,03)\t(C," << newLC << ")\n";
-                LC = newLC;
-            }
-            continue;
-        }
-
-
-        // DL
-        if (DL.find(opcode) != DL.end()) {
-            ic << setw(3) << LC << "\t(DL," << DL[opcode] << ")";
-
-            if (opcode == "DC") {
-                ic << "\t(C," << tokens[startIndex + 1] << ")";
-                LC = LC + 1;
-            }
-            else if (opcode == "DS") {
-                ic << "\t(C," << tokens[startIndex + 1] << ")";
-                LC = LC + stoi(tokens[startIndex + 1]);
-            }
-
-            ic << "\n";
-            continue; 
-        }
-
-        // MOT
-        if (MOT.find(opcode) != MOT.end()) {
-            ic << setw(3) << LC << "\t(" << MOT[opcode].first << "," << MOT[opcode].second << ")\t";
-
-            for (int i = startIndex + 1; i < tokens.size(); i++) {
-                string opnd = tokens[i];
-
-                // Remove trailing comma
-                if (!opnd.empty() && opnd.back() == ',') {
-                    opnd.pop_back();
-                }
-
-                // Check if operand is a register
-                if (REG.find(opnd) != REG.end()) {
-                    ic << "(R," << REG[opnd] << ")\t";
-                }
-                // Check if operand is a literal
-                else if (!opnd.empty() && opnd[0] == '=') {
-                    bool exists = false;
-
-                    for (auto &l : LITTAB) {
-                        if (l.literal == opnd) {
-                            exists = true;
-                            break;
-                        }
-                    }
-                    if (!exists) {
-                        LITTAB.push_back({litIndex++, opnd, -1});
-                    }
-                    int idx = 0;
-                    for (auto &l : LITTAB) {
-                        if (l.literal == opnd) {
-                            idx = l.index;
-                            break;
-                        }
-                    }
-                    ic << "(L," << idx << ")\t";
-                }
-                // Otherwise, operand is a symbol
-                else {
-                    int idx = 0;
-                    bool exists = false;
-
-                    for (auto &s : SYMTAB) {
-                        if (s.name == opnd) {
-                            exists = true;
-                            idx = s.index;
-                            break;
-                        }
-                    }
-                    if (!exists) {
-                        SYMTAB.push_back({symIndex++, opnd, -1});
-                        idx = SYMTAB.back().index;
-                    }
-                    ic << "(S," << idx << ")\t";
-                }
-            }
-            ic << "\n";
-            LC = LC + 1;
-        }
+    // ----------------- HELPER: Split Input Line -----------------
+    vector<string> split(string line) {
+        replace(line.begin(), line.end(), ',', ' ');  // Replace commas with spaces
+        stringstream ss(line);
+        string word;
+        vector<string> tokens;
+        while (ss >> word) tokens.push_back(word);    // Split line into tokens
+        return tokens;
     }
 
-    fin.close(); ic.close();
+    // ----------------- HELPER: Assign Literal Addresses -----------------
+    void assignLiterals(ofstream &out) {
+        for (int i = POOLTAB.back(); i < LITERAL_LIST.size(); i++) {
+            string lit = LITERAL_LIST[i];
+            if (LITTAB[lit] == -1) {                 // If literal unassigned
+                LITTAB[lit] = LOCCTR++;              // Assign current LOCCTR
+                string value = lit.substr(2, lit.size() - 3); // ='5' → 5
+                // Write this literal to intermediate file
+                out << LITTAB[lit] << "\t(DL,01)\t(C," << value << ")\n";
+            }
+        }
+        POOLTAB.push_back(LITERAL_LIST.size());      // Update POOLTAB
+    }
 
-    // SYMTAB
-    for(auto &s:SYMTAB) sym<<s.index<<"\t"<<s.name<<"\t"<<s.address<<"\n";
-    sym.close();
+public:
+    // ----------------- SOURCE CODE STORAGE -----------------
+    vector<string> source;
+    void readSource(string file) {
+        ifstream fin(file);
+        string line;
+        while (getline(fin, line)) source.push_back(line);  // Read each line
+    }
 
-    // LITTAB
-    for(auto &l:LITTAB) lit<<l.index<<"\t"<<l.literal<<"\t"<<l.address<<"\n";
-    lit.close();
+    // ================== PASS-1 STARTS ==================
+    void pass1() {
+        ofstream out("intermediate.txt");            // Output intermediate file
 
-    // POOLTAB
-    for(int i=0;i<POOLTAB.size();i++) pool<<"#"<<i+1<<"\t"<<POOLTAB[i]+1<<"\n";
-    pool.close();
+        for (string line : source) {
+            if (line.empty()) continue;
+            auto tokens = split(line);               // Break line into tokens
 
-    cout<<"Pass-I completed successfully.\n";
-    return 0;
+            string label = "", opcode = tokens[0];   // Assume first word = opcode
+            vector<string> operands;
+
+            // ---------- If first token is NOT opcode → it’s a label ----------
+            if (!IS.count(opcode) && !AD.count(opcode) && !DL.count(opcode)) {
+                label = opcode;                      // First word is label
+                opcode = tokens[1];                  // Next word is opcode
+                for (int i = 2; i < tokens.size(); i++) operands.push_back(tokens[i]);
+            } else {
+                for (int i = 1; i < tokens.size(); i++) operands.push_back(tokens[i]);
+            }
+
+            // ---------- If label exists, store its address ----------
+            if (!label.empty()) SYMTAB[label] = LOCCTR;
+
+            // ---------- HANDLE ASSEMBLER DIRECTIVES ----------
+            if (AD.count(opcode)) {
+                if (opcode == "START") {
+                    LOCCTR = stoi(operands[0]);       // Initialize LOCCTR
+                    out << LOCCTR << "\t(AD,01)\t(C," << LOCCTR << ")\n";
+                } 
+                else if (opcode == "END" || opcode == "LTORG") {
+                    assignLiterals(out);              // Assign addresses to literals
+                    out << LOCCTR << "\t(AD," << AD[opcode] << ")\n";
+                    if (opcode == "END") break;       // Stop processing after END
+                }
+                else if (opcode == "ORIGIN") {
+                    LOCCTR = SYMTAB[operands[0]];     // Set LOCCTR to symbol address
+                    out << LOCCTR << "\t(AD,03)\t(C," << LOCCTR << ")\n";
+                }
+                else if (opcode == "EQU") {
+                    SYMTAB[label] = SYMTAB[operands[0]]; // Assign same address
+                    out << "-\t(AD,04)\t(S," << operands[0] << ")\n";
+                }
+                continue;
+            }
+
+            // ---------- HANDLE DECLARATIVE STATEMENTS ----------
+            if (DL.count(opcode)) {
+                SYMTAB[label] = LOCCTR;               // Save label in SYMTAB
+                out << LOCCTR << "\t(DL," << DL[opcode] << ")\t(C," << operands[0] << ")\n";
+                // Increment LOCCTR
+                LOCCTR += (opcode == "DS") ? stoi(operands[0]) : 1;
+                continue;
+            }
+
+            // ---------- HANDLE IMPERATIVE STATEMENTS ----------
+            if (IS.count(opcode)) {
+                out << LOCCTR << "\t(IS," << IS[opcode] << ")\t";
+
+                // --- REGISTER CODE ---
+                int regCode = (operands.size() > 0 && REG.count(operands[0])) ? REG[operands[0]] : 0;
+                out << "(R," << regCode << ")\t";
+
+                // --- SYMBOL OR LITERAL ---
+                if (operands.size() > 1) {
+                    string op = operands[1];
+                    if (op[0] == '=') {               // It’s a literal
+                        if (!LITTAB.count(op)) {
+                            LITTAB[op] = -1;          // Placeholder
+                            LITERAL_LIST.push_back(op);
+                        }
+                        out << "(L," << LITERAL_LIST.size() << ")"; // literal index
+                    } else {                          // It’s a symbol
+                        if (!SYMTAB.count(op)) SYMTAB[op] = -1;     // Placeholder
+                        out << "(S," << op << ")";     // symbol reference
+                    }
+                }
+                out << "\n";
+                LOCCTR++;                              // Move to next address
+            }
+        }
+
+        out.close();                                   // Intermediate file ready
+        writeTables();                                 // Generate symbol/literal/pool tables
+    }
+
+    // ================== WRITE TABLES ==================
+    void writeTables() {
+        ofstream s("symtab.txt"), l("littab.txt"), p("pooltab.txt");
+
+        // --- SYMBOL TABLE ---
+        s << "Index\tSymbol\tAddress\n";
+        int i = 1;
+        for (auto &x : SYMTAB) s << i++ << "\t" << x.first << "\t" << x.second << "\n";
+
+        // --- LITERAL TABLE ---
+        l << "Index\tLiteral\tAddress\n";
+        i = 1;
+        for (auto &x : LITERAL_LIST) l << i++ << "\t" << x << "\t" << LITTAB[x] << "\n";
+
+        // --- POOL TABLE ---
+        p << "Pool Index\n";
+        for (int val : POOLTAB) p << val << "\n";
+    }
+};
+
+// ================== MAIN FUNCTION ==================
+int main() {
+    Assembler a;                         // Create Assembler object
+    a.readSource("input.txt");           // Read source program from file
+    a.pass1();                           // Execute Pass-1
 }
