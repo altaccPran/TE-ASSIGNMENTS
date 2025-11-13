@@ -1,199 +1,154 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-int main() {
-    ifstream ic("intermediatecode.txt");
-    ifstream symtab("symbtab.txt");
-    ifstream littab("literaltab.txt");
-    ofstream mcode("machinecode.txt");
-
-    if (!ic || !symtab || !littab) {
-        cout << "Error: Missing one of the input files\n";
-        return 1;
-    }
-
-    unordered_map<int, int> SYMTAB;
-    unordered_map<int, int> LITTAB;
-
-    int idx, addr;
+// ---------------- STRUCTURES ----------------
+struct Symbol {
     string name;
+    int address;
+};
 
-    // symbtab: index name address
-    while (symtab >> idx >> name >> addr)
-        SYMTAB[idx] = addr;
+struct Literal {
+    string name;
+    int address;
+};
 
-    // littab: index literal address
-    while (littab >> idx >> name >> addr)
-        LITTAB[idx] = addr;
+// ---------------- FUNCTION: Process Pass-II ----------------
+void processPass2(vector<Symbol> symtab, vector<Literal> littab,
+                  vector<int> pooltab, vector<string> intermediate) {
+    ofstream machineCode("machinecode.txt");
 
-    string line;
-    while (getline(ic, line)) {
-        if (line.empty()) continue;
+    for (string line : intermediate) {
+        if (line.empty()) continue; // skip empty lines
 
         stringstream ss(line);
-        int LC;
-        if (!(ss >> LC)) continue;
+        string LC, classOp, reg, operand;
+        ss >> LC >> classOp;
 
-        vector<string> parts;
-        string tok;
-        while (ss >> tok) parts.push_back(tok);
-        if (parts.empty()) continue;
-
-        string op = parts[0];
-
-        // AD (Assembler Directive) -> no machine code
-        if (op.find("(AD") != string::npos) {
-            mcode << setw(3) << LC << " : " << "---- (AD)\n";
-            continue;
-        }
-
-        // DL (Declarative) -> DC/DS
-        if (op.find("(DL") != string::npos) {
-            // extract the DL code, e.g. (DL,01)
-            size_t comma = op.find(',');
-            size_t close = op.find(')');
-            string dlcode = (comma != string::npos && close != string::npos && close > comma) ? op.substr(comma+1, close - comma - 1) : "";
-            if (dlcode == "01") {
-                // DC -> next token expected (C,val)
-                // find token containing (C,
-                int value = 0;
-                for (size_t i = 1; i < parts.size(); ++i) {
-                    auto &p = parts[i];
-                    if (p.find("(C,") != string::npos) {
-                        // extract between "(C," and ")"
-                        size_t s = p.find("(C,");
-                        size_t e = p.find(')', s);
-                        string num = p.substr(s + 3, e - (s + 3));
-                        value = stoi(num);
-                        break;
+        // ----------- 1️⃣ Skip Assembler Directives (AD) -----------
+        if (classOp.find("AD") != string::npos) {
+            // Handle ORIGIN or EQU if needed (address update only)
+            if (classOp.find("AD,03") != string::npos) {
+                // Example: (S,1)+3 or (S,2)+5
+                string expr;
+                ss >> expr;
+                if (expr.find("+") != string::npos) {
+                    size_t plusPos = expr.find('+');
+                    string symPart = expr.substr(0, plusPos);
+                    string offsetPart = expr.substr(plusPos + 1);
+                    if (symPart.find("S,") != string::npos) {
+                        int symIndex = stoi(symPart.substr(2)) - 1;
+                        int offset = stoi(offsetPart);
+                        int newAddr = symtab[symIndex].address + offset;
+                        machineCode << LC << "\t(AD,03)\t(C," << newAddr << ")\n";
                     }
                 }
-                // format: opcode 00 reg address (we'll put 00 00 value)
-                // ensure value printed at least 1 digit; use width 3 like original but avoid permanent setfill
-                ostringstream out;
-                out << setw(3) << setfill('0') << value;
-                string valstr = out.str();
-                mcode << setw(3) << LC << " : 00  00  " << valstr << "\n";
-                cout << setfill(' '); // reset fill
-            } else if (dlcode == "02") {
-                // DS -> reserve N words (we'll print a comment)
-                int size = 0;
-                for (size_t i = 1; i < parts.size(); ++i) {
-                    auto &p = parts[i];
-                    if (p.find("(C,") != string::npos) {
-                        size_t s = p.find("(C,");
-                        size_t e = p.find(')', s);
-                        string num = p.substr(s + 3, e - (s + 3));
-                        size = stoi(num);
-                        break;
-                    }
-                }
-                mcode << setw(3) << LC << " : " << "---- (DS)  reserve " << size << " words\n";
-            } else {
-                mcode << setw(3) << LC << " : " << "---- (DL unknown)\n";
             }
             continue;
         }
 
-        // IS (Imperative Statement)
-        if (op.find("(IS") != string::npos) {
-            // extract opcode number from (IS,xx)
-            int opcode = 0;
-            {
-                size_t comma = op.find(',');
-                size_t close = op.find(')');
-                if (comma != string::npos && close != string::npos && close > comma) {
-                    string code = op.substr(comma+1, close - comma - 1);
-                    opcode = stoi(code);
-                }
+        // ----------- 2️⃣ Handle Declarative Statements (DL) -----------
+        if (classOp.find("DL,01") != string::npos) {
+            // Declare Constant (DC)
+            ss >> operand;
+            string lit = operand;
+            if (!lit.empty() && lit[0] == '=') lit = lit.substr(1); // remove '='
+            if (!lit.empty() && lit[0] == '\'') lit = lit.substr(1, lit.size() - 2); // remove quotes
+            machineCode << LC << "\t00\t0\t" << lit << endl;
+        } 
+        else if (classOp.find("DL,02") != string::npos) {
+            // Declare Storage (DS)
+            machineCode << LC << "\t--\t--\t--" << endl;
+        }
+
+        // ----------- 3️⃣ Handle Imperative Statements (IS) -----------
+        else if (classOp.find("IS") != string::npos) {
+            ss >> reg >> operand;
+            string opcode = classOp.substr(3);  // e.g. "04"
+            string opfield = "000";             // default operand
+
+            // Case 1: Operand is empty
+            if (operand.empty() || operand == "-") {
+                opfield = "000";
+            }
+            // Case 2: Operand refers to a Literal (L,index)
+            else if (operand.find("L,") != string::npos) {
+                string clean = operand.substr(2);
+                int idx = 0;
+                try { idx = stoi(clean) - 1; } catch (...) { idx = -1; }
+                if (idx >= 0 && idx < littab.size())
+                    opfield = to_string(littab[idx].address);
+            }
+            // Case 3: Operand refers to a Symbol (S,index)
+            else if (operand.find("S,") != string::npos) {
+                string clean = operand.substr(2);
+                int idx = 0;
+                try { idx = stoi(clean) - 1; } catch (...) { idx = -1; }
+                if (idx >= 0 && idx < symtab.size())
+                    opfield = to_string(symtab[idx].address);
+            }
+            // Case 4: Operand is constant
+            else if (operand.find("C,") != string::npos) {
+                opfield = operand.substr(3, operand.size() - 4); // extract constant value
             }
 
-            int regCode = 0;
-            int address = 0;
-            bool address_set = false;
+            // Output: LC  OPCODE  REG  OPERAND_ADDRESS
+            machineCode << LC << "\t" << opcode << "\t" << reg << "\t" << opfield << endl;
+        }
 
-            // parse remaining tokens for (R,x), (S,i), (L,i), (C,val)
-            for (size_t i = 1; i < parts.size(); ++i) {
-                string p = parts[i];
-                // strip commas if any
-                if (!p.empty() && p.back() == ',') p.pop_back();
-
-                // Register: (R,x)
-                if (p.rfind("(R,", 0) == 0) {
-                    size_t s = p.find("(R,");
-                    size_t e = p.find(')', s);
-                    if (e != string::npos) {
-                        string rnum = p.substr(s + 3, e - (s + 3));
-                        regCode = stoi(rnum);
-                    }
-                }
-                // Symbol: (S,i)
-                else if (p.rfind("(S,", 0) == 0) {
-                    size_t s = p.find("(S,");
-                    size_t e = p.find(')', s);
-                    if (e != string::npos) {
-                        string idxs = p.substr(s + 3, e - (s + 3));
-                        int symIndex = stoi(idxs);
-                        if (SYMTAB.find(symIndex) != SYMTAB.end()) {
-                            address = SYMTAB[symIndex];
-                            address_set = true;
-                        } else {
-                            cerr << "Warning: symbol index " << symIndex << " not found in SYMTAB. Using 0.\n";
-                            address = 0;
-                            address_set = true;
-                        }
-                    }
-                }
-                // Literal: (L,i)
-                else if (p.rfind("(L,", 0) == 0) {
-                    size_t s = p.find("(L,");
-                    size_t e = p.find(')', s);
-                    if (e != string::npos) {
-                        string idxs = p.substr(s + 3, e - (s + 3));
-                        int litIndex = stoi(idxs);
-                        if (LITTAB.find(litIndex) != LITTAB.end()) {
-                            address = LITTAB[litIndex];
-                            address_set = true;
-                        } else {
-                            cerr << "Warning: literal index " << litIndex << " not found in LITTAB. Using 0.\n";
-                            address = 0;
-                            address_set = true;
-                        }
-                    }
-                }
-                // Constant: (C,val)
-                else if (p.find("(C,") != string::npos) {
-                    size_t s = p.find("(C,");
-                    size_t e = p.find(')', s);
-                    if (e != string::npos) {
-                        string val = p.substr(s + 3, e - (s + 3));
-                        address = stoi(val);
-                        address_set = true;
-                    }
-                }
-            }
-
-            // final output: LC : opcode reg address
-            // format with width; reset setfill after use
-            ostringstream out;
-            out << setw(2) << setfill('0') << opcode;
-            string opc = out.str();
-            cout << setfill(' ');
-
-            ostringstream out2;
-            out2 << setw(2) << setfill('0') << regCode;
-            string rstr = out2.str();
-            cout << setfill(' ');
-
-            ostringstream out3;
-            out3 << setw(3) << setfill('0') << (address_set ? address : 0);
-            string astr = out3.str();
-            cout << setfill(' ');
-
-            mcode << setw(3) << LC << " : " << opc << "  " << rstr << "  " << astr << "\n";
+        // ----------- 4️⃣ Handle Invalid Lines -----------
+        else {
+            machineCode << LC << "\t--\t--\t--\t; Unsupported or invalid\n";
         }
     }
 
-    cout << "Machine code generated in machinecode.txt\n";
+    machineCode.close();
+    cout << "✅ PASS-II completed successfully. Check 'machinecode.txt'.\n";
+}
+
+// ---------------- MAIN FUNCTION ----------------
+int main() {
+    // ---------------- SYMBOL TABLE ----------------
+    vector<Symbol> symtab = {
+        {"L1", 205},
+        {"NEXT", 209},
+        {"BACK", 213},
+        {"X", 218}
+    };
+
+    // ---------------- LITERAL TABLE ----------------
+    vector<Literal> littab = {
+        {"=5", 202},
+        {"=2", 206},
+        {"=1", 210},
+        {"=2", 211},
+        {"=4", 217}
+    };
+
+    // ---------------- POOL TABLE ----------------
+    vector<int> pooltab = {1, 3, 5};
+
+    // ---------------- INTERMEDIATE CODE ----------------
+    vector<string> intermediate = {
+        "201 (AD,01) (C,201)",
+        "201 (IS,04) 1 (L,1)",
+        "202 (IS,05) 1 (S,4)",
+        "203 (IS,04) 2 (L,2)",
+        "204 (AD,03) (S,1)+3",
+        "207 (AD,05)",
+        "208 (IS,01) 1 (L,3)",
+        "209 (IS,02) 2 (L,4)",
+        "210 (IS,07) 4 (S,3)",
+        "211 (AD,05)",
+        "212 (AD,04) (S,1)",
+        "213 (AD,03) (S,2)+5",
+        "214 (IS,03) 3 (L,5)",
+        "215 (IS,00)",
+        "216 (DL,02) 1",
+        "217 (AD,02)"
+    };
+
+    // ---------------- RUN PASS-II ----------------
+    processPass2(symtab, littab, pooltab, intermediate);
+
     return 0;
 }
