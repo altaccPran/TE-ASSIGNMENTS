@@ -1,0 +1,30 @@
+body {
+    font-family: Arial;
+    text-align: center;
+    margin-top: 50px;
+}
+
+.container {
+    display: inline-block;
+    border: 2px solid black;
+    padding: 15px;
+    width: 250px;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    padding: 8px;
+    margin: 5px 0;
+    border: 1px solid black;
+    cursor: pointer;
+}
+
+button {
+    margin: 5px;
+    padding: 8px 10px;
+    cursor: pointer;
+}

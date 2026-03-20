@@ -1,0 +1,88 @@
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f5f5f5;
+}
+
+header, nav, footer{
+  text-align:center;
+  padding:12px;
+}
+
+header{
+  background:#e6f2ff;
+}
+
+footer{
+  background:#333;
+  color:white;
+}
+
+nav a{
+  margin:0 8px;
+  text-decoration:none;
+  color:darkblue;
+}
+
+.highlight{
+  text-align:center;
+  color:red;
+  font-weight:bold;
+}
+
+main{
+  margin:20px auto;
+  padding:20px;
+  width:90%;
+}
+
+figure{
+  text-align:center;
+}
+
+figure img{
+  width:60%;
+}
+
+table{
+  width:80%;
+  margin:auto;
+  border-collapse:collapse;
+}
+
+th, td{
+  border:1px solid black;
+  padding:8px;
+}
+
+.order-form{
+  width:50%;
+  margin:20px auto;
+  padding:15px;
+}
+
+.order-form label{
+  display:block;
+  margin-top:10px;
+  font-weight:bold;
+}
+
+.order-form input,
+.order-form select,
+.order-form textarea{
+  width:100%;
+  padding:6px;
+  margin-top:5px;
+}
+
+.order-form input[type="radio"],
+.order-form input[type="checkbox"]{
+  width:auto;
+}
+
+.order-form input[type="submit"],
+.order-form input[type="reset"]{
+  width:auto;
+  margin-top:10px;
+  padding:6px 12px;
+}

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>My Book Store — Browse & Buy</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .highlight mark { background: #ffeaa7; padding: 0 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>My Book Store</h1>
+    <p>Read more • Learn more</p>
+    <div class="inline-note">Open: 09:00–21:00</div>
+  </header>
+
+  <p class="highlight">🔥 Special Offer: <mark>Buy 2 Get 1 Free</mark> on selected books!</p>
+
+  <nav>
+    <a href="#books">Books</a> |
+    <a href="#order">Order</a> |
+    <a href="#reviews">Reviews</a> |
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <main>
+
+    <figure>
+      <img src="books.jpg" alt="Books collection">
+      <figcaption><strong>Explore knowledge —</strong> Fiction, Tech & More.</figcaption>
+    </figure>
+
+    <section id="about">
+      <h2>About Us</h2>
+      <p>
+        We provide <strong>quality books</strong> across various genres.
+        From <em>fiction to technology</em>, we have everything you need.
+      </p>
+    </section>
+
+    <section id="books">
+      <h2 style="text-align:center;">Book List</h2>
+
+      <table>
+        <caption>Available Books</caption>
+
+        <thead style="background-color: rgb(100, 149, 237);">
+          <tr>
+            <th>Book</th>
+            <th>Category</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td><mark>Atomic Habits</mark></td>
+            <td>Self Help</td>
+            <td style="text-align:center;">₹500</td>
+          </tr>
+
+          <tr>
+            <td>The Alchemist</td>
+            <td>Fiction</td>
+            <td style="text-align:center;"><del>₹400</del> <ins>₹300</ins></td>
+          </tr>
+
+          <tr>
+            <td>Clean Code</td>
+            <td>Technology</td>
+            <td style="text-align:center;">₹650</td>
+          </tr>
+        </tbody>
+
+        <tfoot>
+          <tr>
+            <td colspan="3">All prices include GST.</td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <section id="reviews">
+      <h2>Customer Reviews</h2>
+      <blockquote>
+        "Amazing collection and fast delivery!" — <cite>A. Sharma</cite>
+      </blockquote>
+    </section>
+
+    <section id="order">
+      <h2>Order Books</h2>
+
+      <form class="order-form" action="#" method="post">
+
+        <label for="name">Name</label>
+        <input type="text" id="name" required>
+
+        <label for="email">Email</label>
+        <input type="email" id="email" required>
+
+        <label for="book">Select Book</label>
+        <select id="book">
+          <option>Atomic Habits</option>
+          <option>The Alchemist</option>
+          <option>Clean Code</option>
+        </select>
+
+        <label>Format</label>
+        <label><input type="radio" name="format" checked> Paperback</label>
+        <label><input type="radio" name="format"> Hardcover</label>
+        <label><input type="radio" name="format"> eBook</label>
+
+        <label>Add-ons</label>
+        <label><input type="checkbox"> Bookmark (+₹20)</label>
+        <label><input type="checkbox"> Gift Wrap (+₹50)</label>
+
+        <label for="search-book">Search Book</label>
+        <input list="books-list" id="search-book" placeholder="Start typing...">
+        <datalist id="books-list">
+          <option value="Atomic Habits">
+          <option value="The Alchemist">
+          <option value="Clean Code">
+          <option value="Rich Dad Poor Dad">
+        </datalist>
+
+        <label for="date">Delivery Date</label>
+        <input type="date" id="date">
+
+        <label for="msg">Notes</label>
+        <textarea id="msg" rows="3" placeholder="Any special request"></textarea>
+
+        <div style="margin-top:12px;">
+          <input type="submit" value="Order Now">
+          <input type="reset" value="Clear">
+        </div>
+
+      </form>
+    </section>
+
+    <section id="contact">
+      <h2>Contact</h2>
+      <p>Phone: +91 98765 43210 • Email: bookstore@gmail.com</p>
+    </section>
+
+  </main>
+
+  <footer>
+    <p><strong>© 2026 My Book Store</strong></p>
+    <address>Pune, India</address>
+  </footer>
+
+</body>
+</html>
