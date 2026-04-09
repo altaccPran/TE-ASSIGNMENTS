@@ -1,13 +1,3 @@
--- Employee Directory lab (PHP + MySQL)
--- Database: company_db, Table: employees
--- Run this in phpMyAdmin or: mysql -u root -p < setup.sql
-
-CREATE DATABASE IF NOT EXISTS company_db
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE company_db;
-
 DROP TABLE IF EXISTS employees;
 
 CREATE TABLE employees (
