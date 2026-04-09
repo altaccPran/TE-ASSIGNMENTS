@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="authApp">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login &amp; Registration — AngularJS</title>
+  <!-- External stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+  <!-- AngularJS 1.8.x from CDN (jsDelivr; stable 1.x line) -->
+  <script src="https://cdn.jsdelivr.net/npm/angular@1.8.3/angular.min.js"></script>
+</head>
+<body ng-controller="AuthController" ng-cloak>
+  <!--
+    Single-page shell: one controller toggles which panel is visible.
+    We use ng-show/ng-hide (not $routeProvider) so opening index.html via file://
+    does not trigger Angular route/CORS issues.
+  -->
+  <main class="app-shell">
+    <header class="app-header">
+      <h1>Account</h1>
+      <p class="subtitle">Login or create an account — no page reload</p>
+    </header>
+
+    <!-- Tab-style navigation: switches activeView between 'login' and 'register' -->
+    <nav class="view-tabs" role="tablist">
+      <button type="button"
+              class="tab"
+              ng-class="{ active: activeView === 'login' }"
+              ng-click="setView('login')"
+              role="tab"
+              aria-selected="{{ activeView === 'login' }}">
+        Login
+      </button>
+      <button type="button"
+              class="tab"
+              ng-class="{ active: activeView === 'register' }"
+              ng-click="setView('register')"
+              role="tab"
+              aria-selected="{{ activeView === 'register' }}">
+        Register
+      </button>
+    </nav>
+
+    <!-- LOGIN PANEL: visible when activeView === 'login' -->
+    <section class="panel panel-login"
+             ng-show="activeView === 'login'"
+             ng-class="{ 'panel--visible': activeView === 'login' }"
+             aria-label="Login form">
+      <h2>Sign in</h2>
+
+      <!--
+        Named form: loginForm gives us loginForm.$valid, loginForm.username.$error, etc.
+        novalidate: we use Angular validation, not browser native popups only.
+      -->
+      <form name="loginForm" novalidate ng-submit="loginUser(loginForm)">
+        <div class="field">
+          <label for="login-username">Username</label>
+          <input id="login-username"
+                 name="username"
+                 type="text"
+                 ng-model="login.username"
+                 ng-required="true"
+                 ng-minlength="3"
+                 autocomplete="username"
+                 placeholder="Your username" />
+          <!-- Field-level errors -->
+          <span class="error" ng-show="loginForm.username.$dirty && loginForm.username.$error.required">
+            Username is required.
+          </span>
+          <span class="error" ng-show="loginForm.username.$dirty && loginForm.username.$error.minlength">
+            Username must be at least 3 characters.
+          </span>
+        </div>
+
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input id="login-password"
+                 name="password"
+                 type="password"
+                 ng-model="login.password"
+                 ng-required="true"
+                 ng-minlength="4"
+                 autocomplete="current-password"
+                 placeholder="Your password" />
+          <span class="error" ng-show="loginForm.password.$dirty && loginForm.password.$error.required">
+            Password is required.
+          </span>
+          <span class="error" ng-show="loginForm.password.$dirty && loginForm.password.$error.minlength">
+            Password must be at least 4 characters.
+          </span>
+        </div>
+
+        <button type="submit"
+                class="btn btn-primary"
+                ng-disabled="loginForm.$invalid || loginForm.$pristine">
+          Log in
+        </button>
+      </form>
+    </section>
+
+    <!-- REGISTRATION PANEL: visible when activeView === 'register' -->
+    <section class="panel panel-register"
+             ng-show="activeView === 'register'"
+             ng-class="{ 'panel--visible': activeView === 'register' }"
+             aria-label="Registration form">
+      <h2>Create account</h2>
+
+      <form name="registerForm" novalidate ng-submit="registerUser(registerForm)">
+        <div class="field">
+          <label for="reg-first">First name</label>
+          <input id="reg-first"
+                 name="firstName"
+                 type="text"
+                 ng-model="register.firstName"
+                 ng-required="true"
+                 ng-minlength="2"
+                 ng-maxlength="64"
+                 placeholder="First name" />
+          <span class="error" ng-show="registerForm.firstName.$dirty && registerForm.firstName.$error.required">
+            First name is required.
+          </span>
+          <span class="error" ng-show="registerForm.firstName.$dirty && registerForm.firstName.$error.minlength">
+            Enter at least 2 characters.
+          </span>
+        </div>
+
+        <div class="field">
+          <label for="reg-last">Last name</label>
+          <input id="reg-last"
+                 name="lastName"
+                 type="text"
+                 ng-model="register.lastName"
+                 ng-required="true"
+                 ng-minlength="2"
+                 ng-maxlength="64"
+                 placeholder="Last name" />
+          <span class="error" ng-show="registerForm.lastName.$dirty && registerForm.lastName.$error.required">
+            Last name is required.
+          </span>
+          <span class="error" ng-show="registerForm.lastName.$dirty && registerForm.lastName.$error.minlength">
+            Enter at least 2 characters.
+          </span>
+        </div>
+
+        <div class="field">
+          <label for="reg-username">Username</label>
+          <input id="reg-username"
+                 name="regUsername"
+                 type="text"
+                 ng-model="register.username"
+                 ng-required="true"
+                 ng-minlength="3"
+                 autocomplete="username"
+                 placeholder="Choose a username" />
+          <span class="error" ng-show="registerForm.regUsername.$dirty && registerForm.regUsername.$error.required">
+            Username is required.
+          </span>
+          <span class="error" ng-show="registerForm.regUsername.$dirty && registerForm.regUsername.$error.minlength">
+            Username must be at least 3 characters.
+          </span>
+        </div>
+
+        <div class="field">
+          <label for="reg-password">Password</label>
+          <input id="reg-password"
+                 name="regPassword"
+                 type="password"
+                 ng-model="register.password"
+                 ng-required="true"
+                 ng-minlength="6"
+                 autocomplete="new-password"
+                 placeholder="Create a password" />
+          <span class="error" ng-show="registerForm.regPassword.$dirty && registerForm.regPassword.$error.required">
+            Password is required.
+          </span>
+          <span class="error" ng-show="registerForm.regPassword.$dirty && registerForm.regPassword.$error.minlength">
+            Password must be at least 6 characters.
+          </span>
+        </div>
+
+        <button type="submit"
+                class="btn btn-primary"
+                ng-disabled="registerForm.$invalid || registerForm.$pristine">
+          Register
+        </button>
+      </form>
+    </section>
+
+    <footer class="app-footer">
+      <small>AngularJS 1.x · Client-side demo only (no server)</small>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

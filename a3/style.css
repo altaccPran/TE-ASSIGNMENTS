@@ -1,30 +1,89 @@
-body {
-    font-family: Arial;
-    text-align: center;
-    margin-top: 50px;
+/*
+ * Stylesheet for viewing employees.xml directly in an XML-capable browser.
+ * CSS can style raw XML as blocks and lists, but it cannot produce a real HTML <table>
+ * from arbitrary element names; use transform.xsl for a true tabular HTML layout.
+ */
+
+employees {
+    display: block;
+    max-width: 52rem;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: #1a1a1a;
+    background: #f4f6f9;
 }
 
-.container {
-    display: inline-block;
-    border: 2px solid black;
-    padding: 15px;
-    width: 250px;
+employee {
+    display: block;
+    margin-bottom: 1.25rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid #c5cdd8;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
 }
 
-ul {
-    list-style-type: none;
-    padding: 0;
+employee:nth-child(even) {
+    background: #f8fafc;
 }
 
-li {
-    padding: 8px;
-    margin: 5px 0;
-    border: 1px solid black;
-    cursor: pointer;
+firstName,
+lastName,
+department,
+designation,
+salary,
+email {
+    display: block;
+    margin: 0.35rem 0;
+    padding-left: 0.25rem;
 }
 
-button {
-    margin: 5px;
-    padding: 8px 10px;
-    cursor: pointer;
+firstName::before {
+    content: "First name: ";
+    font-weight: 600;
+    color: #334155;
+}
+
+lastName::before {
+    content: "Last name: ";
+    font-weight: 600;
+    color: #334155;
+}
+
+department::before {
+    content: "Department: ";
+    font-weight: 600;
+    color: #334155;
+}
+
+designation::before {
+    content: "Designation: ";
+    font-weight: 600;
+    color: #334155;
+}
+
+salary::before {
+    content: "Salary: ";
+    font-weight: 600;
+    color: #334155;
+}
+
+email::before {
+    content: "Email: ";
+    font-weight: 600;
+    color: #334155;
+}
+
+employee::before {
+    content: "Employee ID: " attr(employeeId);
+    display: block;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    color: #0f172a;
 }

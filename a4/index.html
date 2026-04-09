@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Simple To-Do List</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- heading: script may change text if you enter a name -->
+<h2 id="pageTitle">Simple To-Do List</h2>
+
+<!-- dynamic: filled by JavaScript (date / welcome) -->
+<p id="welcomeLine" class="welcome"></p>
+
+<!-- dynamic: task count and last save time updated when list changes -->
+<p class="statusbar">
+    Tasks: <strong id="taskCount">0</strong>
+    &nbsp;|&nbsp;
+    <span id="statusLine">Not saved yet</span>
+</p>
+
+<div class="container">
+
+    <!-- Email section (validation in script.js) -->
+    <label for="email">Email:</label>
+    <input type="text" id="email" placeholder="Enter your email">
+    <button type="button" onclick="validateEmail()">Save Email</button>
+
+    <hr>
+
+    <!-- saved tasks are built here by JavaScript from localStorage -->
+    <ul id="taskList"></ul>
+
+    <button type="button" onclick="addTask()">Add Task</button>
+    <button type="button" onclick="clearAll()">Clear All</button>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

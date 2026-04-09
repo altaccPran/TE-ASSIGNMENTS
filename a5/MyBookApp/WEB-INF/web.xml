@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1">
+
+    <display-name>MyBookApp</display-name>
+
+    <!-- Servlet declaration: maps Java class to a name used below -->
+    <servlet>
+        <servlet-name>DisplayBooksServlet</servlet-name>
+        <servlet-class>DisplayBooksServlet</servlet-class>
+
+        <!-- JDBC settings (edit password to match your MySQL user) -->
+        <init-param>
+            <param-name>jdbcUrl</param-name>
+            <param-value>jdbc:mysql://localhost:3306/ebookshop?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>jdbcUser</param-name>
+            <param-value>root</param-value>
+        </init-param>
+        <init-param>
+            <param-name>jdbcPassword</param-name>
+            <param-value></param-value>
+        </init-param>
+    </servlet>
+
+    <!-- URL pattern: browser path /MyBookApp/displayBooks -->
+    <servlet-mapping>
+        <servlet-name>DisplayBooksServlet</servlet-name>
+        <url-pattern>/displayBooks</url-pattern>
+    </servlet-mapping>
+
+</web-app>

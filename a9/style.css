@@ -1,0 +1,228 @@
+/* --------------------------------------------------------------------------
+   AngularJS Auth SPA — layout, panels, validation states, view transitions
+   -------------------------------------------------------------------------- */
+
+/* Hide template until Angular compiles (avoids raw `{{ }}` flash) */
+[ng\:cloak],
+[ng-cloak],
+[data-ng-cloak],
+.ng-cloak {
+  display: none !important;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #0f1419;
+  --surface: #1a2332;
+  --surface-elevated: #243044;
+  --text: #e8edf4;
+  --muted: #8b9cb3;
+  --accent: #5b9fd4;
+  --accent-hover: #7ab8e8;
+  --danger: #e85d6c;
+  --radius: 12px;
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  --transition: 0.28s ease;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+  background: radial-gradient(ellipse 120% 80% at 50% -20%, #2a3f5f 0%, var(--bg) 55%);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.app-shell {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.app-header {
+  padding: 1.75rem 1.5rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.app-header h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* Tabs */
+.view-tabs {
+  display: flex;
+  padding: 0.75rem 0.75rem 0;
+  gap: 0.35rem;
+}
+
+.tab {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.tab:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tab.active {
+  color: var(--text);
+  background: var(--surface-elevated);
+}
+
+/* Panels: fade + slight slide when toggling ng-show */
+.panel {
+  padding: 1.5rem;
+  background: var(--surface-elevated);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--transition), transform var(--transition);
+  pointer-events: none;
+}
+
+/* When Angular shows the section, we add a visible class via ng-class for transition */
+.panel--visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ng-show adds display; pair with class for animation — initial state from .panel */
+section[ng-show].panel--visible,
+section.panel.panel--visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Fallback: sections that are shown by ng-show still need readable state */
+.panel h2 {
+  margin: 0 0 1.25rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.field input {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text);
+  font-size: 1rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.field input::placeholder {
+  color: rgba(139, 156, 179, 0.6);
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(91, 159, 212, 0.25);
+}
+
+/* Angular validation: invalid + touched/dirty → red border */
+.field input.ng-invalid.ng-dirty,
+.field input.ng-invalid.ng-touched {
+  border-color: var(--danger);
+}
+
+.field input.ng-valid.ng-dirty {
+  border-color: rgba(80, 200, 120, 0.5);
+}
+
+.error {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--danger);
+}
+
+.btn {
+  display: inline-block;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), opacity var(--transition);
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--accent) 0%, #4a8ec4 100%);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--accent-hover) 0%, #5fa0d6 100%);
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.app-footer {
+  padding: 1rem 1.5rem 1.25rem;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.app-footer small {
+  color: var(--muted);
+  font-size: 0.75rem;
+}

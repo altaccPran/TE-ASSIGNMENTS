@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Employee records for a business organization.
+  - Toggle stylesheets: keep ONLY ONE of the two xml-stylesheet PIs below active when
+    viewing in a browser (comment out the other). Browsers may apply the first match
+    or prefer XSL; using one at a time avoids ambiguity.
+  - DTD (DOCTYPE) and XML Schema (xsi:noNamespaceSchemaLocation) are for validators
+    and XML-aware editors; web browsers do not typically show XSD validation results.
+-->
+
+<!--<?xml-stylesheet type="text/css" href="style.css"?>-->
+<?xml-stylesheet type="text/xsl" href="transform.xsl"?>
+
+<!DOCTYPE employees SYSTEM "employees.dtd">
+
+<employees xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation="employees.xsd">
+
+    <employee employeeId="E001">
+        <firstName>Amelia</firstName>
+        <lastName>Hartley</lastName>
+        <department>Engineering</department>
+        <designation>Senior Developer</designation>
+        <salary>98500.00</salary>
+        <email>amelia.hartley@example.com</email>
+    </employee>
+
+    <employee employeeId="E002">
+        <firstName>Raj</firstName>
+        <lastName>Patel</lastName>
+        <department>Human Resources</department>
+        <designation>HR Specialist</designation>
+        <salary>67250.50</salary>
+        <email>raj.patel@example.com</email>
+    </employee>
+
+    <employee employeeId="E003">
+        <firstName>Sofia</firstName>
+        <lastName>Martinez</lastName>
+        <department>Finance</department>
+        <designation>Financial Analyst</designation>
+        <salary>74500.00</salary>
+        <email>sofia.martinez@example.com</email>
+    </employee>
+
+    <employee employeeId="E004">
+        <firstName>Daniel</firstName>
+        <lastName>Kim</lastName>
+        <department>Marketing</department>
+        <designation>Marketing Coordinator</designation>
+        <salary>58900.00</salary>
+        <email>daniel.kim@example.com</email>
+    </employee>
+
+    <employee employeeId="E005">
+        <firstName>Priya</firstName>
+        <lastName>Nair</lastName>
+        <department>Operations</department>
+        <designation>Operations Manager</designation>
+        <salary>112000.00</salary>
+        <email>priya.nair@example.com</email>
+    </employee>
+
+</employees>

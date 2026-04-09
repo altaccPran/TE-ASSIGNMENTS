@@ -1,0 +1,23 @@
+<!--
+  Document Type Definition for employees.xml
+  Declares the legal structure and attributes for the employee roster.
+  Use an XML validator with DTD support to check documents against this file.
+-->
+
+<!ELEMENT employees (employee+)>
+
+<!-- Allow XML Schema instance hints on the root (used with employees.xsd). -->
+<!ATTLIST employees
+    xmlns:xsi CDATA #IMPLIED
+    xsi:noNamespaceSchemaLocation CDATA #IMPLIED>
+
+<!ELEMENT employee (firstName, lastName, department, designation, salary, email)>
+
+<!ATTLIST employee employeeId ID #REQUIRED>
+
+<!ELEMENT firstName (#PCDATA)>
+<!ELEMENT lastName (#PCDATA)>
+<!ELEMENT department (#PCDATA)>
+<!ELEMENT designation (#PCDATA)>
+<!ELEMENT salary (#PCDATA)>
+<!ELEMENT email (#PCDATA)>
