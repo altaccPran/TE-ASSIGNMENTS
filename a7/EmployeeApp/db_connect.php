@@ -6,10 +6,10 @@
 
 declare(strict_types=1);
 
-$DB_HOST = '127.0.0.1';
-$DB_USER = 'root';
-$DB_PASS = '';
-$DB_NAME = 'company_db';
+$DB_HOST = '10.10.8.119';
+$DB_USER = 'te31435';
+$DB_PASS = 'te31435';
+$DB_NAME = 'te31435_db';
 $DB_PORT = 3306;
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
