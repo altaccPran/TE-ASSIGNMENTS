@@ -6,27 +6,26 @@
 
     <display-name>MyBookApp</display-name>
 
-    <!-- Servlet declaration: maps Java class to a name used below -->
     <servlet>
         <servlet-name>DisplayBooksServlet</servlet-name>
         <servlet-class>DisplayBooksServlet</servlet-class>
 
-        <!-- JDBC settings (edit password to match your MySQL user) -->
         <init-param>
             <param-name>jdbcUrl</param-name>
-            <param-value>jdbc:mysql://localhost:3306/ebookshop?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true</param-value>
+            <param-value>jdbc:mysql://10.10.8.119:3306/te31435_db?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</param-value>
         </init-param>
+
         <init-param>
             <param-name>jdbcUser</param-name>
-            <param-value>root</param-value>
+            <param-value>te31435</param-value>
         </init-param>
+
         <init-param>
             <param-name>jdbcPassword</param-name>
-            <param-value></param-value>
+            <param-value>te31435</param-value>
         </init-param>
     </servlet>
 
-    <!-- URL pattern: browser path /MyBookApp/displayBooks -->
     <servlet-mapping>
         <servlet-name>DisplayBooksServlet</servlet-name>
         <url-pattern>/displayBooks</url-pattern>
