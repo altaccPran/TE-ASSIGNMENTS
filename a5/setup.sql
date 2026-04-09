@@ -1,10 +1,7 @@
 -- ebookshop lab: create database, table, and sample rows
 -- Run from Windows Command Prompt (adjust user/path as needed), for example:
 --   mysql -u root -p < setup.sql
--- Or paste into MySQL Workbench / mysql client after connecting.
-
-CREATE DATABASE IF NOT EXISTS ebookshop;
-USE ebookshop;
+-- Or paste into MySQL Workbench / mysql client after connecting
 
 -- Table name matches assignment: ebookshop
 -- Columns: book_id, book_title, book_author, book_price, quantity
