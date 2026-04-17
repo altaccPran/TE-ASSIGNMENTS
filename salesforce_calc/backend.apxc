@@ -1,0 +1,66 @@
+public class ScientificCalculatorController {
+    
+    public Double a {get; set;}
+    public Double b {get; set;}
+    public Double result {get; set;}
+
+    public void add() {
+        result = a + b;
+    }
+
+    public void subtract() {
+        result = a - b;
+    }
+
+    public void multiply() {
+        result = a * b;
+    }
+
+    public void divide() {
+        if (b != 0) {
+            result = a / b;
+        } else {
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Division by zero'));
+        }
+    }
+
+    public void power() {
+        result = Math.pow(a, b);
+    }
+
+    public void sqrt() {
+        if (a >= 0) {
+            result = Math.sqrt(a);
+        }
+    }
+
+    public void log() {
+        if (a > 0) {
+            result = Math.log10(a);
+        }
+    }
+    
+    public void sin() {
+    if (a != null) {
+        result = Math.sin(a);
+    }
+}
+
+public void cos() {
+    if (a != null) {
+        result = Math.cos(a);
+    }
+}
+
+public void tan() {
+    if (a != null) {
+        result = Math.tan(a);
+    }
+}
+
+    public void clear() {
+        a = null;
+        b = null;
+        result = null;
+    }
+}
