@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Simple App</title>
+    <!-- Load Tailwind CSS for simple, clean styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen font-sans p-4">
+
+    <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
+        <h1 class="text-3xl font-bold text-slate-800 mb-2">Hello, Cloud!</h1>
+        <p class="text-slate-500 mb-8">This simple website is being served by Python.</p>
+
+        <div class="bg-blue-50 p-4 rounded-lg mb-8 border border-blue-100">
+            <p class="text-sm text-blue-800 font-medium mb-1">Live Server Time</p>
+            <div id="clock" class="text-4xl font-mono text-blue-600 tracking-tight">00:00:00</div>
+        </div>
+
+        <div class="min-h-[4rem] mb-6 flex items-center justify-center">
+            <p id="quote-display" class="italic text-slate-700">"Click the button below to see a dynamic action!"</p>
+        </div>
+        
+        <button id="quote-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors w-full shadow-md">
+            Generate Message
+        </button>
+    </div>
+
+    <script>
+        // --- 1. Dynamic Clock Logic ---
+        function updateClock() {
+            const now = new Date();
+            // Format time as HH:MM:SS
+            document.getElementById('clock').innerText = now.toLocaleTimeString();
+        }
+        
+        // Run updateClock every 1000 milliseconds (1 second)
+        setInterval(updateClock, 1000);
+        updateClock(); // Call it immediately so there's no 1-second delay at start
+
+        // --- 2. Interactive Quote Logic ---
+        const quotes = [
+            "Your AWS EC2 instance is running beautifully.",
+            "Python's http.server makes deployment a breeze!",
+            "Simplicity is the ultimate sophistication.",
+            "Code is like humor. When you have to explain it, it's bad.",
+            "It works on my machine... and now in the cloud too!"
+        ];
+
+        // Listen for a click on the button
+        document.getElementById('quote-btn').addEventListener('click', function() {
+            // Pick a random number based on the number of quotes
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            // Update the text on the screen
+            document.getElementById('quote-display').innerText = '"' + quotes[randomIndex] + '"';
+        });
+    </script>
+</body>
+</html>
